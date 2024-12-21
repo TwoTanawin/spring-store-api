@@ -2,6 +2,22 @@ package com.example.spring.boot_store_api.repository
 
 import com.example.spring.boot_store_api.models.Product
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
+import java.util.*
 
 interface ProductRepository : JpaRepository<Product, Int> {
+    @Query("SELECT p FROM Product p WHERE " +
+            "(:searchQuery IS NULL OR p.productName LIKE %:searchQuery%) AND " +
+            "(:selectedCategory IS NULL OR p.categoryId = :selectedCategory)")
+    fun findBySearchQueryAndCategory(
+        @Param("searchQuery") searchQuery: String?,
+        @Param("selectedCategory") selectedCategory: Int?,
+        pageable: Pageable
+    ): Page<Product>
+
+    @Query("SELECT p FROM Product p JOIN Category c ON p.categoryId = c.id WHERE p.id = :id")
+    fun findProductWithCategory(@Param("id") id: Int): Optional<Map<String, Any>>
 }
